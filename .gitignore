@@ -32,3 +32,5 @@ Thumbs.db
 
 # Local config (if your CLI uses one)
 .config/
+# AgentAI config (may contain api_key)
+.agentai/

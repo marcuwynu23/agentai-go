@@ -1,6 +1,6 @@
 .PHONY: build test clean install run version-build
 
-BINARY_NAME ?= app
+BINARY_NAME ?= agentai
 DIST_DIR ?= dist
 GOOS := $(shell go env GOOS)
 ifeq ($(GOOS),windows)
@@ -11,7 +11,7 @@ endif
 VERSION ?= $(shell git describe --tags --always --dirty 2>/dev/null || echo "dev")
 COMMIT ?= $(shell git rev-parse --short HEAD 2>/dev/null || echo "none")
 BUILD_DATE ?= $(shell date -u +%Y-%m-%dT%H:%M:%SZ 2>/dev/null || echo "unknown")
-LDFLAGS = -ldflags "-X github.com/marcuwynu23/cli-go-project-template/cmd.Version=$(VERSION) -X github.com/marcuwynu23/cli-go-project-template/cmd.Commit=$(COMMIT) -X github.com/marcuwynu23/cli-go-project-template/cmd.BuildDate=$(BUILD_DATE)"
+LDFLAGS = -ldflags "-X agentai-go/cmd.Version=$(VERSION) -X agentai-go/cmd.Commit=$(COMMIT) -X agentai-go/cmd.BuildDate=$(BUILD_DATE)"
 
 # Build the CLI (development: version=dev)
 build:
@@ -19,7 +19,7 @@ build:
 	go build -o $(OUTPUT) .
 
 # Build with version info for release
-release-build:
+release-build version-build:
 	mkdir -p $(DIST_DIR)
 	go build $(LDFLAGS) -o $(OUTPUT) .
 

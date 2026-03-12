@@ -1,198 +1,153 @@
-# CLI Go Project Template
+# agentai-go – Agentic AI Code Assistant
 
-A **console/cli project template** for building command-line applications in Go with [Cobra](https://github.com/spf13/cobra). Use it as a starting point for tools, automation, or any CLI product.
-
----
+A Go command-line tool that acts as an agentic AI code generator with planning, memory, config (local/global), and multi-provider support (Gemini, OpenAI, OpenRouter, Ollama). Same concept as the [Node.js agentai](https://github.com/marcuwynu23/agentai) implementation.
 
 ## Features
 
-| Feature                 | Description                                                            |
-| ----------------------- | ---------------------------------------------------------------------- |
-| **Cobra**               | Industry-standard CLI framework (used by Kubernetes, Hugo, GitHub CLI) |
-| **Subcommands**         | Top-level commands (e.g. `version`, `example`)                         |
-| **Nested subcommands**  | Command groups (e.g. `example create`, `example list`)                 |
-| **Arguments & flags**   | Positional args with validation, local and persistent flags            |
-| **Help & version**      | Auto-generated help and a version command with build-time info         |
-| **MVC + service layer** | Model / service / view / controller split to avoid tech debt           |
-| **Tests**               | Unit tests for model, service, view; command tests for CLI             |
-| **Docs**                | In-repo guide for extending the template                               |
-
----
-
-## Quick start
-
-### Prerequisites
-
-- **Go 1.21+**
-
-### Build and run
-
-```bash
-# Clone or use this repo as template
-cd cli-go-project-template
-
-# Download dependencies
-go mod download
-
-# Build
-go build -o app .
-
-# Run
-./app --help
-./app version
-./app example create my-item
-./app example list --limit 5
-```
-
-### Using Make (optional)
-
-```bash
-make build      # Build binary (version=dev)
-make test       # Run tests
-make version-build   # Build with git version/commit/date
-make clean      # Remove build artifacts
-```
-
----
-
-## Architecture (MVC + service layer)
-
-The project is structured to keep **controllers thin** and **business logic in services**, so it stays maintainable as it grows:
-
-| Layer          | Directory           | Role                                                                  |
-| -------------- | ------------------- | --------------------------------------------------------------------- |
-| **Model**      | `internal/model/`   | Domain structs and input/result DTOs (no logic).                      |
-| **Service**    | `internal/service/` | Business logic; interfaces + implementations (no I/O, no formatting). |
-| **View**       | `internal/view/`    | Render models to CLI output (`io.Writer`).                            |
-| **Controller** | `cmd/`              | Parse args/flags, call service, call view.                            |
-
-Dependencies are wired in `cmd/deps.go` and can be swapped in tests (e.g. mock `VersionProvider` or `ExampleUseCase`).
-
----
+- **Goal-based code generation**: Describe what you want; agentai plans and executes it
+- **Multi-provider AI**: Gemini, OpenAI, OpenRouter, or Ollama (raw HTTP; no SDK)
+- **Config**: Local (`.agentai/config.json` in repo) or global (`~/.agentai/config.json`); overridable via env
+- **Intelligent planning**: Breaks goals into steps (file_creation, code_generation, test_creation, command_execution)
+- **Memory**: Project state and conversation in `<project-name>/.memory.json`
+- **In-process “MCP”**: File, command, and test operations (no remote servers required)
+- **Safe command execution**: Validation and blocklists for shell commands
 
 ## Project structure
 
 ```
 .
-├── cmd/                      # Controllers (Cobra: input → service → view)
-│   ├── root.go               # Root command, persistent flags
-│   ├── deps.go               # Service/view wiring (injectable for tests)
-│   ├── version.go            # version subcommand
-│   ├── example.go            # example parent command
-│   ├── example_create.go     # example create (nested)
-│   ├── example_list.go       # example list (nested)
-│   └── *_test.go             # Command tests
+├── main.go                 # Entry point
+├── cmd/
+│   ├── root.go             # Root command (agentai)
+│   ├── chat/chat.go        # chat subcommand
+│   ├── config/config.go    # config show / set (--local | --global)
+│   └── version/version.go  # version subcommand
 ├── internal/
-│   ├── model/                # Domain entities, input/result DTOs
-│   ├── service/              # Business logic (interfaces + impl)
-│   └── view/                 # CLI presentation (render to io.Writer)
-├── docs/
-│   ├── GUIDE.md              # Full guide (incl. architecture)
-│   ├── subcommands.md        # Adding subcommands
-│   ├── nested-subcommands.md # Nested command groups
-│   ├── arguments.md          # Args and flags
-│   └── help-and-version.md   # Help and version command
-├── main.go
+│   ├── config/             # Config load/save, .agentai paths
+│   ├── core/               # AI, planner, memory, analyzer, chat handler
+│   ├── types/              # Plan, Step, Reasoning
+│   └── mcp/                # File, command, test servers + client
+├── .env.example            # Example env (copy to .env)
+├── .agentai/               # Local config (optional; create via config set)
 ├── go.mod
-├── Makefile
-└── README.md
+├── USAGE.md                # Usage and provider setup
+├── IMPLEMENTATION.md       # Implementation summary
+├── PROJECT_STRUCTURE.json  # Structure metadata
+└── PROJECT_STRUCTURE.yaml
 ```
 
----
+## Installation
 
-## Command overview
+1. **Go 1.22+**
 
-| Command                     | Description                                               |
-| --------------------------- | --------------------------------------------------------- |
-| `app`                       | Root; show help                                           |
-| `app --help`, `app -h`      | Global help                                               |
-| `app version`               | Print version, commit, build date                         |
-| `app example`               | Example parent; show nested commands                      |
-| `app example create <name>` | Create a resource (e.g. `app example create my-resource`) |
-| `app example list`          | List resources (optional: `--limit`, `--all`)             |
+2. **Clone or navigate to the project**
+   ```bash
+   cd agentai-go
+   ```
 
-**Global flags** (available on all commands):
+3. **Build**
+   ```bash
+   go build -o agentai .
+   # Windows: agentai.exe
+   ```
 
-- `--config` — config file path
-- `-v`, `--verbose` — verbose output
+4. **Configure** (e.g. Gemini)
+   ```bash
+   agentai config set provider gemini --local
+   agentai config set api_key YOUR_GEMINI_API_TOKEN --local
+   agentai config set model gemini-2.5-flash --local
+   ```
+   Or use `.env` (see `.env.example`) with `GEMINI_API_TOKEN`, etc.
 
----
+## Configuration
 
-## Version and release builds
+- **Config file**: `.agentai/config.json`
+  - **Local**: `<current-directory>/.agentai/config.json` (use `--local`)
+  - **Global**: `~/.agentai/config.json` (use `--global`)
+- **Keys**: `provider`, `api_key`, `model`, `base_url`
+- **Resolution**: Explicit `--config` path → local file → global file → environment variables
 
-Default build uses placeholder version info (`dev`, `none`, `unknown`). For releases, inject real values at build time:
+Commands:
 
 ```bash
-go build -ldflags "\
-  -X github.com/marcuwynu23/cli-go-project-template/cmd.Version=1.0.0 \
-  -X github.com/marcuwynu23/cli-go-project-template/cmd.Commit=$(git rev-parse --short HEAD) \
-  -X github.com/marcuwynu23/cli-go-project-template/cmd.BuildDate=$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
-  -o app .
+agentai config show --local     # Show repo config
+agentai config show --global    # Show user config
+agentai config set provider ollama --local
+agentai config set model llama3.2 --local
+agentai config set base_url http://192.168.1.55:11434 --local  # Optional
 ```
 
-Or use the Makefile:
+Environment (optional):
+
+- **GEMINI_API_TOKEN** – Gemini API key (used when provider is gemini and no `api_key` in file)
+- **OPENAI_API_KEY** – OpenAI key (for openai provider)
+- **GEMINI_MODEL** – Model name (e.g. `gemini-2.5-flash`)
+- **REQUEST_DELAY**, **MAX_RETRIES** – Rate limiting
+- **WORKSPACE_PATH**, **LOGS_PATH** – Paths (defaults: cwd, empty)
+
+### Providers and defaults
+
+| Provider     | Default base URL                                          |
+|-------------|------------------------------------------------------------|
+| gemini      | `https://generativelanguage.googleapis.com/v1beta/models` |
+| openai      | `https://api.openai.com/v1`                               |
+| openrouter  | `https://openrouter.ai/api/v1`                            |
+| ollama      | `http://localhost:11434`                                  |
+
+Override any with `base_url` in config.
+
+## Usage
 
 ```bash
-VERSION=1.0.0 make version-build
+agentai chat "your goal here"
 ```
 
----
-
-## Testing
-
-Tests follow the layers: unit tests for **model**, **service**, and **view**; command tests for the **CLI** (controllers).
+Examples:
 
 ```bash
-go test ./...
+agentai chat "create a hello world program"
+agentai chat "create a REST API with Express.js that has a /users endpoint"
+agentai chat "build a todo list application with Node.js"
 ```
 
-- **`internal/model`** — model structs
-- **`internal/service`** — business logic (e.g. `Create`, `List`, `GetVersion`)
-- **`internal/view`** — output formatting (render to buffer, assert content)
-- **`cmd/*_test.go`** — run root with `SetArgs`, capture output; optionally replace `defaultDeps` with mocks
+With Ollama (default localhost):
 
----
+```bash
+agentai config set provider ollama --local
+agentai config set model llama3.2 --local
+agentai chat "create a simple CLI in Go"
+```
+
+## Development status
+
+- **Multi-provider AI**: Implemented (Gemini, OpenAI, OpenRouter, Ollama) via raw HTTP
+- **Config**: Local/global `.agentai/config.json` and env
+- **File operations**: Create, modify, read in project directory
+- **Code generation**: AI-generated code with cleanup
+- **Test creation**: AI-generated or template test files
+- **Command execution**: Validated, safe command execution
+
+## How it works
+
+1. **Config**: Load provider, api_key, model, base_url (file + env).
+2. **Project**: New run → AI suggests project name and directory; existing run → reuse.
+3. **Analysis**: Scan codebase; summarize for planner.
+4. **Plan**: AI produces a JSON plan (steps with types and dependencies).
+5. **Execution**: For each step, AI reasons then the MCP client runs file/command/test logic.
+6. **Memory**: Results and conversation saved to `<project-name>/.memory.json`.
+
+## Requirements
+
+- Go 1.22+
+- API key for Gemini, OpenAI, or OpenRouter; or local Ollama (no key)
 
 ## Documentation
 
-Detailed guides are in the **`docs/`** folder:
-
-| Document                                                | Contents                                                                                                   |
-| ------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
-| [**GUIDE.md**](docs/GUIDE.md)                           | Full guide: architecture, structure, subcommands, nested commands, args, help, version, testing, releasing |
-| [**architecture.md**](docs/architecture.md)             | MVC + service layer: model, service, view, controller and dependency flow                                  |
-| [**subcommands.md**](docs/subcommands.md)               | How to add a new top-level subcommand                                                                      |
-| [**nested-subcommands.md**](docs/nested-subcommands.md) | How to add nested commands under a parent                                                                  |
-| [**arguments.md**](docs/arguments.md)                   | Positional arguments and flags                                                                             |
-| [**help-and-version.md**](docs/help-and-version.md)     | Customizing help and the version command                                                                   |
-
-Start with **GUIDE.md** when extending or customizing the template.
-
----
-
-## Customizing the template
-
-1. **Rename the module**  
-   Update `go.mod` and replace `github.com/marcuwynu23/cli-go-project-template` in imports and ldflags.
-
-2. **Rename the binary**  
-   Change the root command `Use` in `cmd/root.go` (e.g. from `app` to `mycli`).
-
-3. **Add subcommands**  
-   Follow [docs/subcommands.md](docs/subcommands.md) and [docs/nested-subcommands.md](docs/nested-subcommands.md).
-
-4. **Add arguments and flags**  
-   Use [docs/arguments.md](docs/arguments.md) and Cobra’s `Args` and `Flags()`.
-
-5. **Replace example commands**  
-   Remove or replace `cmd/example*.go` with your own commands.
-
----
+- **USAGE.md** – Usage, providers, config, troubleshooting
+- **IMPLEMENTATION.md** – Implementation summary and architecture
+- **PROJECT_STRUCTURE.json** / **PROJECT_STRUCTURE.yaml** – Structure and file roles
+- **docs/** – Development guide and architecture
 
 ## License
 
-Use this template freely for personal or commercial projects. Consider a mention or star if it helps you ship.
-
----
-
-**Built with [Cobra](https://github.com/spf13/cobra) · Go CLI template**
+MIT

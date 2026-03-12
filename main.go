@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/marcuwynu23/cli-go-project-template/cmd"
+	"agentai-go/cmd"
 )
 
 func main() {
