@@ -1,17 +1,73 @@
-# agentai – Agentic AI Code Assistant
+<h1 align="center">AgentAI</h1>
+<p align="center">
+  <a href="https://github.com/marcuwynu23/agentai/releases">
+    <img src="https://img.shields.io/github/release/marcuwynu23/agentai.svg" alt="Latest Release">
+  </a>
+  <a href="https://goreportcard.com/report/github.com/marcuwynu23/agentai">
+    <img src="https://goreportcard.com/badge/github.com/marcuwynu23/agentai" alt="Go Report Card">
+  </a>
+  <a href="https://godoc.org/github.com/marcuwynu23/agentai">
+    <img src="https://img.shields.io/badge/godoc-reference-blue.svg" alt="GoDoc">
+  </a>
+  <a href="https://github.com/marcuwynu23/agentai/blob/main/LICENSE">
+    <img src="https://img.shields.io/github/license/marcuwynu23/agentai.svg" alt="License">
+  </a>
+  <a href="https://github.com/marcuwynu23/agentai/stargazers">
+    <img src="https://img.shields.io/github/stars/marcuwynu23/agentai.svg?style=social" alt="Stars">
+  </a>
+</p>
 
-A Go command-line tool that acts as an agentic AI code generator with planning, memory, config (local/global), and multi-provider support.
+
+<p align="center">
+  <strong>AI Code Assistant</strong>
+</p>
+
+<p align="center">
+  A command-line tool that helps you write code faster with AI assistance, smart planning, and support for multiple AI providers.
+</p>
+
+<p align="center">
+  <a href="#installation">Quick Start</a> •
+  <a href="#features">Features</a> •
+  <a href="#usage">Usage</a> •
+  <a href="#configuration">Configuration</a> •
+  <a href="#providers">Providers</a>
+</p>
 
 ## Features
 
-- Goal-based code generation: Describe what you want; agentai plans and executes it
-- Multi-provider AI: Gemini, OpenAI, OpenRouter, or Ollama (raw HTTP; no SDK)
-- Config: Local (`.agentai/config.json` in repo) or global (`~/.agentai/config.json`); overridable via env
-- Intelligent planning: Breaks goals into steps (file_creation, code_generation, test_creation, command_execution)
-- Memory: Project state and conversation in `<project-name>/.memory.json`
-- In-process MCP: File, command, and test operations (no remote servers required)
-- Safe command execution: Validation and blocklists for shell commands
-- Interactive TUI chat interface
+### Goal-Based Development
+- Describe what you want to build in plain English
+- AI automatically creates a step-by-step plan
+- Handles file creation, code writing, testing, and command execution
+
+### Multiple AI Providers
+- **Gemini** - Google's advanced AI model
+- **OpenAI** - GPT models with strong capabilities
+- **OpenRouter** - Access to many AI models through one service
+- **Ollama** - Run AI models locally on your machine
+- **Cloudflare AI Gateway** - Enterprise AI with analytics and caching
+
+### Easy Configuration
+- **Project Settings**: Store settings in your project folder
+- **Global Settings**: Store settings for all projects
+- **Environment Variables**: Override settings when needed
+- **Switch Easily**: Change AI providers and models anytime
+
+### Smart Memory
+- **Project Memory**: Remembers your conversation and project state
+- **Code Understanding**: Analyzes your existing code automatically
+- **Context Awareness**: Keeps track of what you're working on
+
+### Safe and Secure
+- **Command Safety**: Validates shell commands before running
+- **Local Processing**: Your code stays on your computer
+- **No External Servers**: Built-in file operations
+
+### Interactive Interface
+- **Terminal UI**: Clean, modern interface
+- **Real-time Updates**: See progress as it happens
+- **Activity Logging**: Track what AgentAI is doing
 
 ## Installation
 
@@ -61,7 +117,7 @@ Environment (optional):
 - REQUEST_DELAY, MAX_RETRIES – Rate limiting
 - WORKSPACE_PATH, LOGS_PATH – Paths (defaults: cwd, empty)
 
-### Providers and defaults
+## Supported Providers
 
 | Provider    | Default base URL                                          |
 |-------------|------------------------------------------------------------|
@@ -69,8 +125,24 @@ Environment (optional):
 | openai      | `https://api.openai.com/v1`                               |
 | openrouter  | `https://openrouter.ai/api/v1`                            |
 | ollama      | `http://localhost:11434`                                  |
+| cloudflare  | `https://gateway.ai.cloudflare.com/v1`                    |
 
 Override any with `base_url` in config.
+
+#### Cloudflare AI Gateway Setup
+
+For Cloudflare AI Gateway, you need:
+1. **Account ID** - Find it in the Cloudflare dashboard
+2. **API Token** - Create a token with AI Gateway - Read and AI Gateway - Edit permissions
+3. **Base URL format** - `https://gateway.ai.cloudflare.com/v1/{account_id}/{gateway_id}/compat`
+
+Example configuration:
+```bash
+agentai config set provider cloudflare --local
+agentai config set api_key YOUR_CLOUDFLARE_API_TOKEN --local
+agentai config set base_url https://gateway.ai.cloudflare.com/v1/123456789/default/compat --local
+agentai config set model openai/gpt-4 --local
+```
 
 ## Usage
 
@@ -88,9 +160,9 @@ agentai config set model llama3.2 --local
 agentai chat
 ```
 
-## Development status
+## Development Status
 
-- Multi-provider AI: Implemented (Gemini, OpenAI, OpenRouter, Ollama) via raw HTTP
+- Multi-provider AI: Implemented (Gemini, OpenAI, OpenRouter, Ollama, Cloudflare AI Gateway) via raw HTTP
 - Config: Local/global `.agentai/config.json` and env
 - File operations: Create, modify, read in project directory
 - Code generation: AI-generated code with cleanup
@@ -98,7 +170,7 @@ agentai chat
 - Command execution: Validated, safe command execution
 - TUI chat interface: Implemented with live activity logging
 
-## How it works
+## How It Works
 
 1. Config: Load provider, api_key, model, base_url (file + env).
 2. Project: New run → AI suggests project name and directory; existing run → reuse.
@@ -110,12 +182,11 @@ agentai chat
 ## Requirements
 
 - Go 1.22+
-- API key for Gemini, OpenAI, or OpenRouter; or local Ollama (no key)
+- API key for Gemini, OpenAI, OpenRouter, or Cloudflare AI Gateway; or local Ollama (no key)
 
 ## Documentation
 
 - USAGE.md – Usage, providers, config, troubleshooting
-- IMPLEMENTATION.md – Implementation summary and architecture
 - docs/ – Development guide and architecture
 
 ## License
